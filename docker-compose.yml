@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: movie-reco-postgres
+    environment:
+      POSTGRES_USER: movie_user
+      POSTGRES_PASSWORD: movie_password
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - movie_reco_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U movie_user -d movie_reco_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: movie-reco-backend
+    env_file:
+      - ./apps/backend/.env.docker
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/backend/data:/app/data
+      - ~/.aws:/root/.aws:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  movie_reco_pgdata:

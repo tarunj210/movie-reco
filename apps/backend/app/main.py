@@ -7,6 +7,8 @@ from app.api.recommend import router as recommend_router
 from app.api.health import router as health_router
 from app.services.loaders import load_cf_recommendations, load_content_recommendations
 
+from app.services.artifact_downloader import ensure_artifacts_available
+
 app = FastAPI()
 
 app.add_middleware(
@@ -19,6 +21,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
+    ensure_artifacts_available()
     load_content_recommendations()
     load_cf_recommendations()
 

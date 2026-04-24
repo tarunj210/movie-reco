@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parents[2]
 ENV_FILE = BASE_DIR / ".env"
 
-load_dotenv(ENV_FILE)
+load_dotenv(ENV_FILE, override=True)
 
 
 def _get_required_env(name: str) -> str:
@@ -119,6 +119,16 @@ MOVIES_TITLE_COL = "title"
 # -------------------------------------------------------------------
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip()
+
+S3_ARTIFACTS_ENABLED = _get_bool_env("S3_ARTIFACTS_ENABLED", default=False)
+AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-2").strip()
+
+S3_ARTIFACT_BUCKET = os.getenv("S3_ARTIFACT_BUCKET", "").strip()
+S3_CF_RECS_KEY = os.getenv("S3_CF_RECS_KEY", "artifacts/cf_top50_recommendations.csv").strip()
+S3_CONTENT_RECS_KEY = os.getenv(
+    "S3_CONTENT_RECS_KEY",
+    "artifacts/final_movie_recommendations_mapped.csv",
+).strip()
 
 # -------------------------------------------------------------------
 # Startup validation

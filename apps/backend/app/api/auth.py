@@ -25,8 +25,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     if not row:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # INTEGER password comparison (TEMPORARY)
-    if int(payload.password) != row["passwd"]:
+    if str(payload.password).strip() != str(row["passwd"]).strip():
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token(sub=str(row["userid"]))
