@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 # Example expected location:
 # apps/backend/.env
 BASE_DIR = Path(__file__).resolve().parents[2]
-ENV_FILE = BASE_DIR / ".env"
+
+APP_ENV_FILE = os.getenv("APP_ENV_FILE", ".env.local")
+ENV_FILE = BASE_DIR / APP_ENV_FILE
 
 load_dotenv(ENV_FILE, override=True)
 

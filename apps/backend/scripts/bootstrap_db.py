@@ -7,13 +7,18 @@ import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text, inspect
 
-load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+APP_ENV_FILE = os.getenv("APP_ENV_FILE", ".env.local")
+ENV_FILE = BASE_DIR / APP_ENV_FILE
+load_dotenv(ENV_FILE, override=True)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not set in your environment or .env file")
+    raise RuntimeError(f"DATABASE_URL is not set in {ENV_FILE}")
 
-BASE_DIR = Path(__file__).resolve().parents[1]
+# Change this only if your CSVs are really in artifacts/
 DATA_DIR = BASE_DIR / "artifacts"
 
 RATINGS_CSV = DATA_DIR / "ratings_small.csv"
@@ -30,13 +35,29 @@ engine = create_engine(DATABASE_URL)
 def required_tables_exist() -> bool:
     inspector = inspect(engine)
     existing_tables = set(inspector.get_table_names())
-    required = {"users", "movies_enriched", "ratings"}
-    return required.issubset(existing_tables)
+
+    required_tables = {"users", "movies_enriched", "ratings"}
+    if not required_tables.issubset(existing_tables):
+        return False
+
+    movie_columns = {col["name"] for col in inspector.get_columns("movies_enriched")}
+    required_movie_columns = {
+        "movieid",
+        "title",
+        "genres",
+        "overview",
+        "poster_path",
+        "director",
+        "keywords",
+        "release_date",
+    }
+
+    return required_movie_columns.issubset(movie_columns)
 
 
 def bootstrap() -> None:
     if required_tables_exist():
-        print("Required tables already exist. Skipping bootstrap.")
+        print("Required tables and columns already exist. Skipping bootstrap.")
         return
 
     print("Loading CSV files...")
@@ -67,7 +88,7 @@ def bootstrap() -> None:
         }
     )[["movieid", "title", "genres"]]
 
-    # Add columns expected by the backend
+    # Add columns expected by backend
     movies["overview"] = ""
     movies["poster_path"] = ""
     movies["director"] = ""
