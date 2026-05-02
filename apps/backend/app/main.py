@@ -6,6 +6,7 @@ from app.api.history import router as history_router
 from app.api.recommend import router as recommend_router
 from app.api.health import router as health_router
 from app.services.loaders import load_cf_recommendations, load_content_recommendations
+from app.api.events import router as events_router
 
 from app.services.artifact_downloader import ensure_artifacts_available
 
@@ -29,3 +30,4 @@ app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(history_router)
 app.include_router(recommend_router)
+app.include_router(events_router)

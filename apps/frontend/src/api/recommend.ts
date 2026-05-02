@@ -17,6 +17,8 @@ export type RecommendationItem = {
   reranked_score?: number;
   reason?: string;
   rank: number;
+  dynamic_score?: number;
+  recent_interest_score?: number;
 };
 
 export type HybridRecommendationsResponse = {

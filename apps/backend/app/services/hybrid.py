@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.services.metadata import get_user_seen_and_liked_movies, get_movie_metadata
 from app.services.content import get_aggregated_content_scores, normalize_scores
 from app.services.collaborative import get_cf_scores_for_user
-
+from app.services.recent_interactions import rerank_with_recent_interactions
 
 def get_hybrid_alpha(liked_movies_count: int) -> float:
     """
@@ -92,7 +92,7 @@ def merge_hybrid_scores(content_scores, cf_scores, alpha: float):
 def get_hybrid_recommendations_for_user(
     user_id: int,
     db: Session,
-    limit: int = 30
+    limit: int = 30,
 ):
     seen_movies, liked_movies = get_user_seen_and_liked_movies(
         user_id, db, min_rating=4.0
@@ -104,7 +104,7 @@ def get_hybrid_recommendations_for_user(
     content_scores, contribution_count = get_aggregated_content_scores(
         liked_movies=liked_movies,
         seen_movies=seen_movies,
-        per_movie_top_k=10
+        per_movie_top_k=10,
     )
 
     cf_scores = get_cf_scores_for_user(user_id, seen_movies)
@@ -117,25 +117,26 @@ def get_hybrid_recommendations_for_user(
     merged_scores = merge_hybrid_scores(
         content_scores=content_scores,
         cf_scores=cf_scores,
-        alpha=alpha
+        alpha=alpha,
     )
 
     ranked = sorted(
         merged_scores.items(),
         key=lambda x: x[1]["final_score"],
-        reverse=True
-    )[:limit * 3]
+        reverse=True,
+    )[: limit * 5]
 
-    top_movie_ids = [movie_id for movie_id, _ in ranked]
-    metadata = get_movie_metadata(top_movie_ids, db)
+    candidate_movie_ids = [movie_id for movie_id, _ in ranked]
+    metadata = get_movie_metadata(candidate_movie_ids, db)
 
-    recommendations = []
+    candidates = []
+
     for movie_id, score_bundle in ranked:
         movie_meta = metadata.get(movie_id)
         if not movie_meta:
             continue
 
-        recommendations.append({
+        candidates.append({
             "movieId": movie_id,
             "title": movie_meta.get("title", ""),
             "genres": movie_meta.get("genres", ""),
@@ -143,15 +144,29 @@ def get_hybrid_recommendations_for_user(
             "poster": movie_meta.get("poster_path", ""),
             "director": movie_meta.get("director", ""),
             "keywords": movie_meta.get("keywords", ""),
+            "release_date": movie_meta.get("release_date", ""),
             "content_score": round(float(score_bundle["content_score"]), 4),
             "cf_score": round(float(score_bundle["cf_score"]), 4),
             "final_score": round(float(score_bundle["final_score"]), 4),
             "signal_count": score_bundle.get("signal_count", 0),
             "support_count": contribution_count.get(movie_id, 0),
-            "rank": len(recommendations) + 1
         })
 
-        if len(recommendations) >= limit:
-            break
+    reranked_candidates = rerank_with_recent_interactions(
+        db=db,
+        user_id=user_id,
+        candidates=candidates,
+        recent_limit=50,
+        recent_weight=0.18,
+        negative_penalty=0.35,
+    )
 
-    return recommendations, {"alpha": alpha}  
+    final_recommendations = reranked_candidates[:limit]
+
+    for idx, movie in enumerate(final_recommendations, start=1):
+        movie["rank"] = idx
+
+    return final_recommendations, {
+        "alpha": alpha,
+        "reranking": "recent_interactions_enabled",
+    }
