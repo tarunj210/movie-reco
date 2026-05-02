@@ -9,3 +9,6 @@ pydantic
 python-multipart
 boto3
 botocore[crt]
+numpy
+scipy
+scikit-learn

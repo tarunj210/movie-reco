@@ -152,21 +152,13 @@ def get_hybrid_recommendations_for_user(
             "support_count": contribution_count.get(movie_id, 0),
         })
 
-    reranked_candidates = rerank_with_recent_interactions(
-        db=db,
-        user_id=user_id,
-        candidates=candidates,
-        recent_limit=50,
-        recent_weight=0.18,
-        negative_penalty=0.35,
-    )
 
-    final_recommendations = reranked_candidates[:limit]
+    final_recommendations = candidates[:limit]
 
     for idx, movie in enumerate(final_recommendations, start=1):
         movie["rank"] = idx
 
     return final_recommendations, {
         "alpha": alpha,
-        "reranking": "recent_interactions_enabled",
+        "reranking": "disabled_feedback_used_for_async_retraining",
     }

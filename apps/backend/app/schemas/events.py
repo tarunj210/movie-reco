@@ -22,3 +22,8 @@ class InteractionEventResponse(BaseModel):
     event_type: str
     event_value: float | None
     message: str
+
+    feedback_updated: bool = False
+    feedback_count: int | None = None
+    content_refresh_job_created: bool = False
+    content_refresh_job_id: int | None = None

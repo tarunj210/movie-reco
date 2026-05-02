@@ -14,7 +14,7 @@ def create_event(
     db: Session = Depends(get_db),
 ):
     try:
-        event_id = save_interaction(
+        result = save_interaction(
             db=db,
             user_id=payload.user_id,
             movie_id=payload.movie_id,
@@ -28,12 +28,16 @@ def create_event(
         db.commit()
 
         return InteractionEventResponse(
-            id=event_id,
+            id=result["event_id"],
             user_id=payload.user_id,
             movie_id=payload.movie_id,
             event_type=payload.event_type,
             event_value=payload.event_value,
             message="Event logged successfully",
+            feedback_updated=result["feedback_updated"],
+            feedback_count=result["feedback_count"],
+            content_refresh_job_created=result["content_refresh_job_created"],
+            content_refresh_job_id=result["content_refresh_job_id"],
         )
 
     except ValueError as exc:
