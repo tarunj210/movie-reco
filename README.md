@@ -97,9 +97,7 @@ Uses movie metadata:
 - director
 
 
-<img width="644" height="774" alt="Screenshot 2026-04-07 at 11 30 22 AM" src="https://github.com/user-attachments/assets/baacd16d-74cb-4c97-afa3-2de733bea28e" />
-
-<img width="648" height="777" alt="Screenshot 2026-04-07 at 11 31 24 AM" src="https://github.com/user-attachments/assets/ba649b80-17f5-4228-b2bf-99739afffac7" />
+<img width="650" height="777" alt="Screenshot 2026-05-02 at 5 35 48 PM" src="https://github.com/user-attachments/assets/99ceab39-3041-452e-889f-d6df8b806e6f" />
 
 
 
