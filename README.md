@@ -1,115 +1,139 @@
-#  Hybrid Movie Recommendation System  
-*A Scalable, Preference-Aware Recommender using Collaborative Filtering, Content-Based Filtering, and LLM-driven Personalization*
+# Hybrid Movie Recommendation Platform
+
+*A full-stack, production-style movie recommendation system using collaborative filtering, content-based filtering, user feedback loops, and preference-aware reranking.*
 
 ---
 
-##  Overview
+## Overview
 
-This project implements a **hybrid recommendation system** that combines:
+This project is an end-to-end **hybrid movie recommendation platform** that combines:
 
-- **Collaborative Filtering (NeuMF)**
-- **Content-Based Filtering (metadata similarity)**
-- **Preference-Aware Reranking**
+- **Collaborative Filtering** using NeuMF
+- **Content-Based Filtering** using movie metadata similarity
+- **Preference-Aware Reranking** from user-provided natural language preferences
+- **Feedback Logging** through user likes, dislikes, ratings, and clicks
+- **Asynchronous Content Refresh** using stored user feedback and historical watch/rating data
 
-The system generates **personalized movie recommendations** and dynamically adapts to **user-specified preferences in natural language**.
-
----
-
-##  Key Features
-
--  Hybrid recommender (CF + Content)
--  Precomputed top-K recommendations 
--  Natural language preference parsing 
--  Preference-based filtering & reranking
--  Interactive frontend with posters & explanations
--  Scalable backend using FastAPI
--  Docker-ready architecture
+The system is designed not just as a machine learning notebook, but as a deployable recommendation platform with a frontend, backend APIs, database persistence, precomputed model artifacts, and a scalable path toward cloud deployment.
 
 ---
 
-##  System Architecture
+## Key Features
 
-### Pipeline
-
-User history
-  |
-Collaborative Filtering
-  |
-  |
-Content Based 
-  |
-  | 
-Hybrid Scoring
-  |
-  |
-Preferene Parsing
-  |
-  |
-Filtering /Reranking
-  |
-  |
-Final Recommendations
-
-
+- Hybrid recommendation engine combining collaborative and content-based signals
+- NeuMF-based collaborative filtering for user-item preference learning
+- Metadata-driven content similarity using genres, keywords, cast, director, and descriptions
+- Precomputed top-K recommendations for low-latency serving
+- User interaction logging through clicks, likes, dislikes, and ratings
+- Feedback table for future retraining without immediately removing movies from display
+- Threshold-based async content refresh pipeline
+- User-specific refreshed content candidates stored in PostgreSQL
+- Natural language preference parsing and reranking
+- React frontend with poster-based recommendation UI
+- FastAPI backend for recommendation serving and event logging
+- PostgreSQL-backed persistence layer
+- Docker-ready architecture
+- Designed for future AWS deployment with S3, RDS, ECR, ECS/EKS, and blue-green model artifact promotion
 
 ---
 
-##  Tech Stack
-
-### Backend
-- Python
-- FastAPI
-- PostgreSQL
-
-### ML / Data
-- PyTorch (NeuMF model)
-- Pandas / NumPy
-- scikit-learn
+## Tech Stack
 
 ### Frontend
+
 - React
+- TypeScript
+- Tailwind CSS
 - Axios
 
-### Deployment
+### Backend
+
+- Python
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- JWT-based authentication
+
+### Machine Learning
+
+- PyTorch
+- NeuMF collaborative filtering
+- scikit-learn
+- Pandas
+- NumPy
+- TF-IDF / CountVectorizer-based content similarity
+
+### Infrastructure
+
 - Docker
-- Kubernetes
+- Docker Compose
+- Amazon S3 for large recommendation/model artifacts
+- PostgreSQL locally via Docker
+- Designed for AWS RDS, ECR, ECS/EKS, CloudWatch, and Terraform-based deployment
 
 ---
 
-## 🧠 Model Components
+## Dataset
 
-### 🔹 1. Collaborative Filtering (NeuMF)
+The system is designed around the MovieLens dataset and enriched movie metadata.
 
-- Learns user-item interactions
-- Uses embeddings for users and movies
-- Captures implicit preferences
+Example scale:
 
+- 32M+ ratings
+- 87K+ movies
+- 2M+ tags
+
+Core entities:
+
+- Users
+- Movies
+- Ratings
+- Tags
+- Enriched metadata such as genres, cast, director, keywords, overview, and poster paths
 
 ---
 
-### 🔹 2. Content-Based Filtering
+## System Architecture
 
-Uses movie metadata:
+### High-Level Architecture
 
-- genres
-- keywords
-- cast
-- director
+```mermaid
+flowchart TD
+    A[React Frontend] --> B[FastAPI Backend]
+
+    B --> C[PostgreSQL]
+    B --> D[S3 Artifact Store]
+
+    C --> C1[users]
+    C --> C2[ratings]
+    C --> C3[movies_enriched]
+    C --> C4[interaction_events]
+    C --> C5[user_movie_feedback]
+    C --> C6[content_refresh_jobs]
+    C --> C7[user_content_candidates]
+
+    D --> D1[Collaborative Recommendation Artifacts]
+    D --> D2[Content Recommendation Artifacts]
+    D --> D3[NeuMF Model Files]
+
+    B --> E[Hybrid Recommendation Service]
+    E --> F[Final Ranked Recommendations]
 
 
-<img width="650" height="777" alt="Screenshot 2026-05-02 at 5 35 48 PM" src="https://github.com/user-attachments/assets/99ceab39-3041-452e-889f-d6df8b806e6f" />
+Recommendation Pipeline
 
-Architecture Diagram
+  flowchart TD
+    A[User History] --> B[Collaborative Filtering - NeuMF]
+    A --> C[Content-Based Filtering]
 
-<img width="2874" height="1458" alt="mermaid-diagram (1)" src="https://github.com/user-attachments/assets/4246e47e-384f-439b-8da7-a64a7898b26d" />
-<img width="2684" height="1074" alt="mermaid-diagram (2)" src="https://github.com/user-attachments/assets/5275947b-19f4-41a3-aea8-a46b9eb04ccf" />
-<img width="2950" height="1874" alt="mermaid-diagram" src="https://github.com/user-attachments/assets/57663a78-e9d5-4367-a635-9913d6bc35af" />
+    B --> D[Collaborative Candidates]
+    C --> E[Content Candidates]
 
+    D --> F[Hybrid Scoring]
+    E --> F
 
+    G[Natural Language Preferences] --> H[Preference Parser]
+    H --> I[Filtering and Reranking]
 
-
-
-
-  
-
-
+    F --> I
+    I --> J[Final Recommendations]
