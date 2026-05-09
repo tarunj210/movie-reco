@@ -99,6 +99,13 @@ Uses movie metadata:
 
 <img width="650" height="777" alt="Screenshot 2026-05-02 at 5 35 48 PM" src="https://github.com/user-attachments/assets/99ceab39-3041-452e-889f-d6df8b806e6f" />
 
+Architecture Diagram
+
+<img width="2874" height="1458" alt="mermaid-diagram (1)" src="https://github.com/user-attachments/assets/4246e47e-384f-439b-8da7-a64a7898b26d" />
+<img width="2684" height="1074" alt="mermaid-diagram (2)" src="https://github.com/user-attachments/assets/5275947b-19f4-41a3-aea8-a46b9eb04ccf" />
+<img width="2950" height="1874" alt="mermaid-diagram" src="https://github.com/user-attachments/assets/57663a78-e9d5-4367-a635-9913d6bc35af" />
+
+
 
 
 
