@@ -97,43 +97,15 @@ Core entities:
 
 ### High-Level Architecture
 
-```mermaid
-flowchart TD
-    A[React Frontend] --> B[FastAPI Backend]
-
-    B --> C[PostgreSQL]
-    B --> D[S3 Artifact Store]
-
-    C --> C1[users]
-    C --> C2[ratings]
-    C --> C3[movies_enriched]
-    C --> C4[interaction_events]
-    C --> C5[user_movie_feedback]
-    C --> C6[content_refresh_jobs]
-    C --> C7[user_content_candidates]
-
-    D --> D1[Collaborative Recommendation Artifacts]
-    D --> D2[Content Recommendation Artifacts]
-    D --> D3[NeuMF Model Files]
-
-    B --> E[Hybrid Recommendation Service]
-    E --> F[Final Ranked Recommendations]
+<img width="1535" height="1185" alt="mermaid-diagram (4)" src="https://github.com/user-attachments/assets/fec46056-cf63-466e-ad0a-d3e9d99f5a5d" />
 
 
-Recommendation Pipeline
+###Feedback and Async Content Refresh
 
-  flowchart TD
-    A[User History] --> B[Collaborative Filtering - NeuMF]
-    A --> C[Content-Based Filtering]
+The system supports feedback-driven personalization without retraining the full collaborative model after every interaction.
 
-    B --> D[Collaborative Candidates]
-    C --> E[Content Candidates]
+<img width="1255" height="2742" alt="mermaid-diagram (5)" src="https://github.com/user-attachments/assets/4392397f-37c4-4a9d-b39b-af4cc73af0b1" />
 
-    D --> F[Hybrid Scoring]
-    E --> F
 
-    G[Natural Language Preferences] --> H[Preference Parser]
-    H --> I[Filtering and Reranking]
 
-    F --> I
-    I --> J[Final Recommendations]
+
