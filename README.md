@@ -100,7 +100,7 @@ Core entities:
 <img width="1535" height="1185" alt="mermaid-diagram (4)" src="https://github.com/user-attachments/assets/fec46056-cf63-466e-ad0a-d3e9d99f5a5d" />
 
 
-###Feedback and Async Content Refresh
+### Feedback and Async Content Refresh
 
 The system supports feedback-driven personalization without retraining the full collaborative model after every interaction.
 
