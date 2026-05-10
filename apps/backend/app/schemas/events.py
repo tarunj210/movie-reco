@@ -8,7 +8,12 @@ from pydantic import BaseModel, Field
 class InteractionEventRequest(BaseModel):
     user_id: int
     movie_id: int | None = None
-    event_type: str = Field(..., examples=["movie_click", "movie_rating"])
+
+    event_type: str = Field(
+        ...,
+        examples=["movie_click", "movie_like", "movie_dislike", "movie_rating"],
+    )
+
     event_value: float | None = None
     source: str | None = None
     rank: int | None = None
@@ -19,11 +24,20 @@ class InteractionEventResponse(BaseModel):
     id: int
     user_id: int
     movie_id: int | None
+
     event_type: str
     event_value: float | None
+
     message: str
 
     feedback_updated: bool = False
     feedback_count: int | None = None
+
     content_refresh_job_created: bool = False
     content_refresh_job_id: int | None = None
+    content_refresh_status: str | None = None
+
+    collaborative_retrain_job_created: bool = False
+    collaborative_retrain_job_id: int | None = None
+    collaborative_retrain_status: str | None = None
+    collaborative_feedback_count: int | None = None

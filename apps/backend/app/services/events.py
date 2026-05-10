@@ -7,6 +7,10 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.services.collaborative_jobs import (
+    maybe_enqueue_collaborative_retrain_job,
+)
+
 
 RATING_EVENT_TYPES = {"movie_rating", "rating"}
 LIKE_EVENT_TYPES = {"movie_like", "like"}
@@ -199,6 +203,38 @@ def has_active_content_refresh_job(db: Session, user_id: int) -> bool:
 
     return bool(db.execute(q, {"user_id": user_id}).scalar_one())
 
+def get_active_content_refresh_job(
+    db: Session,
+    user_id: int,
+) -> dict[str, Any] | None:
+    q = text("""
+        SELECT
+            id,
+            status,
+            feedback_count
+        FROM content_refresh_jobs
+        WHERE user_id = :user_id
+          AND status IN ('pending', 'running')
+        ORDER BY created_at DESC
+        LIMIT 1
+    """)
+
+    row = db.execute(
+        q,
+        {
+            "user_id": user_id,
+        },
+    ).mappings().first()
+
+    if not row:
+        return None
+
+    return {
+        "id": int(row["id"]),
+        "status": str(row["status"]),
+        "feedback_count": int(row["feedback_count"]),
+    }
+
 
 def get_latest_non_failed_refresh_feedback_count(
     db: Session,
@@ -282,15 +318,34 @@ def enqueue_content_refresh_job(
 def maybe_enqueue_content_refresh_job(
     db: Session,
     user_id: int,
-) -> tuple[bool, int | None, int]:
-    feedback_count = count_user_explicit_feedback(db=db, user_id=user_id)
+) -> tuple[bool, int | None, int, str | None]:
+    feedback_count = count_user_explicit_feedback(
+        db=db,
+        user_id=user_id,
+    )
+
+    if feedback_count < CONTENT_REFRESH_MIN_FEEDBACK:
+        return False, None, feedback_count, None
+
+    active_job = get_active_content_refresh_job(
+        db=db,
+        user_id=user_id,
+    )
+
+    if active_job:
+        return (
+            False,
+            active_job["id"],
+            feedback_count,
+            active_job["status"],
+        )
 
     if not should_enqueue_content_refresh(
         db=db,
         user_id=user_id,
         feedback_count=feedback_count,
     ):
-        return False, None, feedback_count
+        return False, None, feedback_count, None
 
     job_id = enqueue_content_refresh_job(
         db=db,
@@ -298,7 +353,7 @@ def maybe_enqueue_content_refresh_job(
         feedback_count=feedback_count,
     )
 
-    return True, job_id, feedback_count
+    return True, job_id, feedback_count, "pending"
 
 
 def save_interaction(
@@ -331,7 +386,13 @@ def save_interaction(
 
     content_refresh_job_created = False
     content_refresh_job_id: int | None = None
+    content_refresh_status: str | None = None
     feedback_count: int | None = None
+
+    collaborative_retrain_job_created = False
+    collaborative_retrain_job_id: int | None = None
+    collaborative_retrain_status: str | None = None
+    collaborative_feedback_count: int | None = None
 
     if should_update_feedback:
         if movie_id is None:
@@ -352,15 +413,34 @@ def save_interaction(
             content_refresh_job_created,
             content_refresh_job_id,
             feedback_count,
+            content_refresh_status,
         ) = maybe_enqueue_content_refresh_job(
             db=db,
             user_id=user_id,
         )
 
+        (
+            collaborative_retrain_job_created,
+            collaborative_retrain_job_id,
+            collaborative_retrain_status,
+            collaborative_feedback_count,
+        ) = maybe_enqueue_collaborative_retrain_job(
+            db=db,
+            triggered_by_user_id=user_id,
+        )
+
     return {
         "event_id": event_id,
+
         "feedback_updated": should_update_feedback,
         "feedback_count": feedback_count,
+
         "content_refresh_job_created": content_refresh_job_created,
         "content_refresh_job_id": content_refresh_job_id,
+        "content_refresh_status": content_refresh_status,
+
+        "collaborative_retrain_job_created": collaborative_retrain_job_created,
+        "collaborative_retrain_job_id": collaborative_retrain_job_id,
+        "collaborative_retrain_status": collaborative_retrain_status,
+        "collaborative_feedback_count": collaborative_feedback_count,
     }

@@ -175,6 +175,68 @@ def init_feedback_tables() -> None:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """))
+        
+        print("Creating collaborative_retrain_jobs table...")
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS collaborative_retrain_jobs (
+                id BIGSERIAL PRIMARY KEY,
+
+                triggered_by_user_id INTEGER,
+
+                feedback_count INTEGER NOT NULL DEFAULT 0,
+
+                status VARCHAR(50) NOT NULL DEFAULT 'pending',
+
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                started_at TIMESTAMP,
+                finished_at TIMESTAMP,
+
+                model_version VARCHAR(255),
+
+                error_message TEXT
+            );
+        """))
+
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_collaborative_retrain_jobs_status
+            ON collaborative_retrain_jobs(status);
+        """))
+
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_collaborative_retrain_jobs_created_at
+            ON collaborative_retrain_jobs(created_at);
+        """))
+
+        print("Creating user_cf_candidates table...")
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS user_cf_candidates (
+                user_id INTEGER NOT NULL,
+                movie_id INTEGER NOT NULL,
+
+                score FLOAT NOT NULL,
+                rank INTEGER,
+                reason TEXT,
+
+                model_version VARCHAR(255),
+                run_id BIGINT,
+
+                generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                PRIMARY KEY (user_id, movie_id)
+            );
+        """))
+
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_cf_candidates_user_id
+            ON user_cf_candidates(user_id);
+        """))
+
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_cf_candidates_score
+            ON user_cf_candidates(score);
+        """))
 
     print("Feedback/content refresh tables initialized successfully.")
 

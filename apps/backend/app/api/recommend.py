@@ -1,5 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from app.services.recommendation_cache import (
+    get_cached_hybrid_recommendations,
+    set_cached_hybrid_recommendations,
+)
 
 from app.db.session import get_db
 from app.schemas.preferences import PreferenceRequest, ParsedPreferences
@@ -10,27 +14,39 @@ router = APIRouter(prefix="/recommend", tags=["recommend"])
 @router.get("/hybrid")
 def recommend_hybrid(
     user_id: int,
-    limit: int = 100,
+    limit: int = 30,
     db: Session = Depends(get_db),
 ):
+    cached_response = get_cached_hybrid_recommendations(
+        user_id=user_id,
+        limit=limit,
+    )
+
+    if cached_response is not None:
+        cached_response["meta"]["cache"] = "hit"
+        return cached_response
+
     recommendations, meta = get_hybrid_recommendations_for_user(
         user_id=user_id,
         db=db,
-        limit=limit
+        limit=limit,
     )
 
-    if not recommendations:
-        return {
-            "user_id": user_id,
-            "recommendations": [],
-            **meta
-        }
-
-    return {
-        "user_id": user_id,
+    response = {
         "recommendations": recommendations,
-        **meta
+        "meta": {
+            **meta,
+            "cache": "miss",
+        },
     }
+
+    set_cached_hybrid_recommendations(
+        user_id=user_id,
+        limit=limit,
+        response=response,
+    )
+
+    return response
 
 @router.post("/preferences")
 def recommend_with_preferences(

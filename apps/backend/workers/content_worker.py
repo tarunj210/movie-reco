@@ -11,6 +11,9 @@ import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
+from app.services.recommendation_cache import (
+    invalidate_user_recommendation_cache,
+)
 
 # Make app imports work when running:
 # python workers/content_worker.py
@@ -295,6 +298,10 @@ def process_job(
             user_id=user_id,
             job_id=job_id,
             recommendations=recommendations,
+        )
+        
+        invalidate_user_recommendation_cache(
+            user_id=user_id,
         )
 
         mark_job_completed(engine, job_id)

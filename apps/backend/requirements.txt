@@ -12,3 +12,4 @@ botocore[crt]
 numpy
 scipy
 scikit-learn
+redis
